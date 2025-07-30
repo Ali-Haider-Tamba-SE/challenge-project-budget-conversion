@@ -374,6 +374,101 @@ test('DELETE /api/project/budget/:id should return 400 for invalid projectId for
   })
 })
 
+test('POST /api/project/budget/currency should return 200 and data', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const data = {
+    currency: 'TTD',
+    projectName: 'Humitas Hewlett Packard',
+    year: 2024
+  }
+
+  servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.ok(res.body.success, 'Should return success')
+    t.ok(Array.isArray(res.body.data), 'Should return data array')
+    t.end()
+  }).end(JSON.stringify(data))
+})
+
+test('POST /api/project/budget/currency should return 400 if required fields are missing', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const invalidData = {
+    projectName: 'Humitas Hewlett Packard'
+    // Missing year and currency
+  }
+
+  servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for missing fields')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(invalidData))
+})
+
+test('POST /api/project/budget/currency should return 400 for invalid year type', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const invalidType = {
+    projectName: 'Humitas Hewlett Packard',
+    year: 'two-thousand-twenty-four',
+    currency: 'TTD'
+  }
+
+  servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for invalid year type')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(invalidType))
+})
+
+test('POST /api/project/budget/currency should include finalBudgetTtd for eligible TTD project', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const ttdProject = {
+    projectName: 'Choucroute Cartier',
+    year: 2000,
+    currency: 'TTD'
+  }
+
+  servertest(server, '/api/project/budget/currency', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.ok(res.body.success, 'Should return success')
+    const project = res.body.data[0]
+    t.ok(project.finalBudgetUsd, 'Should have finalBudgetUsd')
+    t.ok(project.finalBudgetTtd, 'Should have finalBudgetTtd')
+    t.end()
+  }).end(JSON.stringify(ttdProject))
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
