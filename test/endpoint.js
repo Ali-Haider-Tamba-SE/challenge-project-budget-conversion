@@ -469,6 +469,105 @@ test('POST /api/project/budget/currency should include finalBudgetTtd for eligib
   }).end(JSON.stringify(ttdProject))
 })
 
+test('POST /api-conversion should return 200 and converted TTD value', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }
+
+  const body = {
+    projectName: 'Choucroute Cartier',
+    year: 2000
+  }
+
+  servertest(server, '/api/api-conversion', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.ok(res.body.success, 'Should return success')
+    const project = res.body.data[0]
+    t.ok(project.budgetTtd, 'Should return budgetTtd')
+    t.ok(project.finalBudgetTtd, 'Should return finalBudgetTtd')
+    t.ok(project.initialBudgetTtd, 'Should return initialBudgetTtd')
+    t.end()
+  }).end(JSON.stringify(body))
+})
+
+test('POST /api-conversion should return 400 if required fields are missing', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }
+
+  servertest(server, '/api/api-conversion', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for missing fields')
+    t.ok(res.body.error.includes('Missing required fields'), 'Should return error message')
+    t.end()
+  }).end(JSON.stringify({}))
+})
+
+test('POST /api-conversion should return 400 for invalid year type', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }
+
+  const body = {
+    projectName: 'Choucroute Cartier',
+    year: 'not-a-number'
+  }
+
+  servertest(server, '/api/api-conversion', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for invalid year type')
+    t.ok(res.body.error.includes('year must be a number'), 'Should return type error message')
+    t.end()
+  }).end(JSON.stringify(body))
+})
+
+test('POST /api-conversion should return 403 for disallowed project name', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }
+
+  const body = {
+    projectName: 'Some Random Project',
+    year: 2024
+  }
+
+  servertest(server, '/api/api-conversion', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 403, 'Should return 403 for unauthorized project')
+    t.ok(res.body.error.includes('not allowed'), 'Should explain restricted access')
+    t.end()
+  }).end(JSON.stringify(body))
+})
+
+test('POST /api-conversion should return 404 for project not found', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  }
+
+  const body = {
+    projectName: 'Choucroute Cartier',
+    year: 1900 // unlikely to exist
+  }
+
+  servertest(server, '/api/api-conversion', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 404, 'Should return 404 for no matching project')
+    t.ok(res.body.error.includes('No projects found'), 'Should explain missing data')
+    t.end()
+  }).end(JSON.stringify(body))
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
