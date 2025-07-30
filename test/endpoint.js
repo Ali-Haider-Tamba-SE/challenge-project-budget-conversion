@@ -84,6 +84,129 @@ test('GET /api/project/budget/:id should return full project data structure', fu
   })
 })
 
+test('POST /api/project/budget should return 201', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const data = {
+    projectId: 10001,
+    projectName: 'Humitas Hewlett Packard',
+    year: 2024,
+    currency: 'EUR',
+    initialBudgetLocal: 316974.5,
+    budgetUsd: 233724.23,
+    initialScheduleEstimateMonths: 13,
+    adjustedScheduleEstimateMonths: 12,
+    contingencyRate: 2.19,
+    escalationRate: 3.46,
+    finalBudgetUsd: 247106.75
+  }
+
+  servertest(server, '/api/project/budget', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 201, 'Should return 201')
+    t.end()
+  }).end(JSON.stringify(data))
+})
+
+test('POST /api/project/budget should return 400 if required fields are missing', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const invalidData = {
+    projectId: 10002,
+    // Missing projectName
+    year: 2024,
+    currency: 'EUR',
+    initialBudgetLocal: 1000,
+    budgetUsd: 900,
+    initialScheduleEstimateMonths: 6,
+    adjustedScheduleEstimateMonths: 5,
+    contingencyRate: 1.2,
+    escalationRate: 1.3,
+    finalBudgetUsd: 950
+  }
+
+  servertest(server, '/api/project/budget', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for missing field')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(invalidData))
+})
+
+test('POST /api/project/budget should return 409 for duplicate projectId', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const duplicateData = {
+    projectId: 10001, // Already used in previous test
+    projectName: 'Duplicate Test Project',
+    year: 2025,
+    currency: 'USD',
+    initialBudgetLocal: 5000,
+    budgetUsd: 5000,
+    initialScheduleEstimateMonths: 6,
+    adjustedScheduleEstimateMonths: 6,
+    contingencyRate: 0,
+    escalationRate: 0,
+    finalBudgetUsd: 5000
+  }
+
+  servertest(server, '/api/project/budget', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.ok(res.statusCode === 409 || res.statusCode === 400, 'Should return 409 or 400 for duplicate ID')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(duplicateData))
+})
+
+test('POST /api/project/budget should return 400 for invalid field type', function (t) {
+  const opts = {
+    encoding: 'json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const invalidTypeData = {
+    projectId: 'not-a-number', // Invalid type
+    projectName: 'Invalid Type Project',
+    year: 2024,
+    currency: 'EUR',
+    initialBudgetLocal: 1000,
+    budgetUsd: 900,
+    initialScheduleEstimateMonths: 6,
+    adjustedScheduleEstimateMonths: 5,
+    contingencyRate: 1.2,
+    escalationRate: 1.3,
+    finalBudgetUsd: 950
+  }
+
+  servertest(server, '/api/project/budget', opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for invalid projectId type')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(invalidTypeData))
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
