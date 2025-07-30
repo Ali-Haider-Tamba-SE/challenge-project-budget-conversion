@@ -4,6 +4,8 @@ const http = require('http')
 const test = require('tape')
 const servertest = require('servertest')
 const app = require('../lib/app')
+const db = require('../lib/db')
+require('../scripts/seed')
 
 const server = http.createServer(app)
 
@@ -30,4 +32,9 @@ test('GET /nonexistent should return 404', function (t) {
     t.equal(res.statusCode, 404, 'Should return 404')
     t.end()
   })
+})
+
+test.onFinish(() => {
+  if (db.close) db.close()
+  process.exit(0)
 })
