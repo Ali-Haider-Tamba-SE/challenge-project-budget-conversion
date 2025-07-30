@@ -207,6 +207,129 @@ test('POST /api/project/budget should return 400 for invalid field type', functi
   }).end(JSON.stringify(invalidTypeData))
 })
 
+test('PUT /api/project/budget/:id should return 200', function (t) {
+  const projectId = '10001'
+  const opts = {
+    encoding: 'json',
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const data = {
+    projectName: 'Humitas Hewlett Packard',
+    year: 2025,
+    currency: 'EUR',
+    initialBudgetLocal: 316974.5,
+    budgetUsd: 233724.23,
+    initialScheduleEstimateMonths: 13,
+    adjustedScheduleEstimateMonths: 12,
+    contingencyRate: 2.19,
+    escalationRate: 3.46,
+    finalBudgetUsd: 247106.75
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.end()
+  }).end(JSON.stringify(data))
+})
+
+test('PUT /api/project/budget/:id should return 404 if project not found', function (t) {
+  const projectId = '999999' // Assumed non-existent
+  const opts = {
+    encoding: 'json',
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const data = {
+    projectName: 'Nonexistent Project',
+    year: 2025,
+    currency: 'USD',
+    initialBudgetLocal: 1000,
+    budgetUsd: 1000,
+    initialScheduleEstimateMonths: 6,
+    adjustedScheduleEstimateMonths: 6,
+    contingencyRate: 1.2,
+    escalationRate: 1.3,
+    finalBudgetUsd: 1100
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 404, 'Should return 404 if project not found')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(data))
+})
+
+test('PUT /api/project/budget/:id should return 400 for invalid projectId in URL', function (t) {
+  const projectId = 'abc' // Invalid
+  const opts = {
+    encoding: 'json',
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const data = {
+    projectName: 'Invalid ID Project',
+    year: 2025,
+    currency: 'USD',
+    initialBudgetLocal: 1000,
+    budgetUsd: 1000,
+    initialScheduleEstimateMonths: 6,
+    adjustedScheduleEstimateMonths: 6,
+    contingencyRate: 1.2,
+    escalationRate: 1.3,
+    finalBudgetUsd: 1100
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for invalid ID format')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(data))
+})
+
+test('PUT /api/project/budget/:id should return 400 if required fields are missing', function (t) {
+  const projectId = '10001'
+  const opts = {
+    encoding: 'json',
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const invalidData = {
+    // projectName is missing
+    year: 2025,
+    currency: 'USD',
+    initialBudgetLocal: 1000,
+    budgetUsd: 1000,
+    initialScheduleEstimateMonths: 6,
+    adjustedScheduleEstimateMonths: 6,
+    contingencyRate: 1.2,
+    escalationRate: 1.3,
+    finalBudgetUsd: 1100
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for missing field')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  }).end(JSON.stringify(invalidData))
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
