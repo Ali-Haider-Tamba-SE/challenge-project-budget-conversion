@@ -20,7 +20,7 @@ const createTableSql = `
 `
 let data = ''
 
-db.query(createTableSql, err => {
+db.executeQuery(createTableSql, [], err => {
   if (err) return console.error('Error creating table:', err)
   stream.on('data', chunk => {
     data += chunk.toString()
@@ -40,7 +40,7 @@ db.query(createTableSql, err => {
 
       const insertSql = `INSERT INTO project values (${parsedValues.join(',')})`
 
-      db.query(insertSql, err => {
+      db.executeQuery(insertSql, [], err => {
         if (err) {
           console.error('Error inserting Project ID:', values[0], err)
           process.exit(1)
@@ -51,9 +51,11 @@ db.query(createTableSql, err => {
   })
 
   stream.on('end', () => {
-    db.end(err => {
-      if (err) return console.error('Error closing database connection:', err)
-      console.log('Database connection closed')
-    })
+    if (process.env.NODE_ENV !== 'test') {
+      db.end(err => {
+        if (err) return console.error('Error closing database connection:', err)
+        console.log('Database connection closed')
+      })
+    }
   })
 })
