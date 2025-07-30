@@ -105,6 +105,20 @@ test('PUT /api/project/budget/:id should return 200', function (t) {
   }).end(JSON.stringify(data))
 })
 
+test('DELETE /api/project/budget/:id should return 200', function (t) {
+  const projectId = '10001'
+  const opts = {
+    encoding: 'json',
+    method: 'DELETE'
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.end()
+  })
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
