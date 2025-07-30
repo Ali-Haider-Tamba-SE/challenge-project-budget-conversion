@@ -330,6 +330,50 @@ test('PUT /api/project/budget/:id should return 400 if required fields are missi
   }).end(JSON.stringify(invalidData))
 })
 
+test('DELETE /api/project/budget/:id should return 200', function (t) {
+  const projectId = '10001'
+  const opts = {
+    encoding: 'json',
+    method: 'DELETE'
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.end()
+  })
+})
+
+test('DELETE /api/project/budget/:id should return 404 if project does not exist', function (t) {
+  const projectId = '999999' // Assumed non-existent
+  const opts = {
+    encoding: 'json',
+    method: 'DELETE'
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 404, 'Should return 404 for nonexistent project')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  })
+})
+
+test('DELETE /api/project/budget/:id should return 400 for invalid projectId format', function (t) {
+  const projectId = 'invalid-id' // Not a number
+  const opts = {
+    encoding: 'json',
+    method: 'DELETE'
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 400, 'Should return 400 for invalid ID format')
+    t.ok(res.body && res.body.error, 'Should return error message')
+    t.end()
+  })
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
