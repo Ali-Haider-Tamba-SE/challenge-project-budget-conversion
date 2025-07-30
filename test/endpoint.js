@@ -75,6 +75,36 @@ test('POST /api/project/budget should return 201', function (t) {
   }).end(JSON.stringify(data))
 })
 
+test('PUT /api/project/budget/:id should return 200', function (t) {
+  const projectId = '10001'
+  const opts = {
+    encoding: 'json',
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const data = {
+    projectName: 'Humitas Hewlett Packard',
+    year: 2025,
+    currency: 'EUR',
+    initialBudgetLocal: 316974.5,
+    budgetUsd: 233724.23,
+    initialScheduleEstimateMonths: 13,
+    adjustedScheduleEstimateMonths: 12,
+    contingencyRate: 2.19,
+    escalationRate: 3.46,
+    finalBudgetUsd: 247106.75
+  }
+
+  servertest(server, `/api/project/budget/${projectId}`, opts, function (err, res) {
+    t.error(err, 'No error')
+    t.equal(res.statusCode, 200, 'Should return 200')
+    t.end()
+  }).end(JSON.stringify(data))
+})
+
 test.onFinish(() => {
   if (db.close) db.close()
   process.exit(0)
